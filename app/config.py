@@ -1,4 +1,5 @@
 from pydantic import BaseSettings
+from os import environ
 
 
 class Settings(BaseSettings):
@@ -13,10 +14,10 @@ class Settings(BaseSettings):
     POSTGRES_HOSTNAME: str
 
     CLICK_SETTINGS = {
-        'service_id': "26422",
-        'merchant_id': "18648",
-        'secret_key': "SIL0aI5ijxl0TbL",
-        'merchant_user_id': "30092",
+        'service_id': environ.get('CLICK_SERVICE_ID'),
+        'merchant_id': environ.get('CLICK_MERCHANT_ID'),
+        'secret_key': environ.get('CLICK_SECRET_KEY'),
+        'merchant_user_id': environ.get('CLICK_MERCHANT_USER_ID'),
     }
 
     class Config:
