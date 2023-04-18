@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-
+from datetime import datetime
 
 class ClickTransactionCreate(BaseModel):
     click_trans_id: str = ""
@@ -11,7 +11,7 @@ class ClickTransactionCreate(BaseModel):
     action: str = ""
     error: str = ""
     error_note: str = ""
-    sign_time: str
+    sign_time: datetime
     sign_string: str = ""
     click_paydoc_id: str
 

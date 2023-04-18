@@ -1,6 +1,9 @@
 from pydantic import BaseSettings
+from dotenv import load_dotenv
 from os import environ
+load_dotenv()
 
+print("environ.get('CLICK_SERVICE_ID'), ", environ.get('CLICK_SERVICE_ID'))
 
 class Settings(BaseSettings):
     APP_NAME: str = "Click API"
@@ -12,7 +15,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     POSTGRES_HOST: str
     POSTGRES_HOSTNAME: str
-
+    print("environ.get('CLICK_SERVICE_ID'), ", environ.get('CLICK_SERVICE_ID'))
     CLICK_SETTINGS = {
         'service_id': environ.get('CLICK_SERVICE_ID'),
         'merchant_id': environ.get('CLICK_MERCHANT_ID'),

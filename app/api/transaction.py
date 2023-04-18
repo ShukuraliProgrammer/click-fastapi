@@ -1,15 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from app.click.crud import create_transaction
+from .pyclick_merchant import click_merchant
 
 router = APIRouter()
 
 from app.click.schema import ClickTransactionCreate
 from app.click.utils import generate_url
-from app.click.models import ClickTransaction
-from app.click.status import (PREPARE, COMPLETE, AUTHORIZATION_FAIL_CODE, AUTHORIZATION_FAIL, ACTION_NOT_FOUND, ORDER_FOUND,
-                            ORDER_NOT_FOUND, INVALID_AMOUNT, ALREADY_PAID, TRANSACTION_NOT_FOUND, TRANSACTION_CANCELLED,
-                            SUCCESS)
 
 
 
@@ -25,19 +22,5 @@ async def create_click_transaction(
     return {
         "link": url,
     }
-
-
-@router.post("/transaction/check/")
-async def check_order(order_id: str, amount: str):
-    if order_id:
-        try:
-            order = await ClickTransaction.get(id=order_id)
-            if int(amount) == order.amount:
-                return ORDER_FOUND
-            else:
-                return INVALID_AMOUNT
-        except Exception as e:
-            print(e)
-            return ORDER_NOT_FOUND
 
 

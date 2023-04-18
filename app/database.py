@@ -29,4 +29,6 @@ def get_db_uri(user, passwd, host, db):
 
 def register_views(app: FastAPI):
     from app.api.transaction import router as create_click_transaction
-    app.include_router(create_click_transaction, prefix="/process/click", tags=["Click"])
+    from app.api.pyclick_merchant import router as click_merchant
+    app.include_router(create_click_transaction, prefix="/pyclick/process/click", tags=["Click"])
+    app.include_router(click_merchant, prefix="/pyclick/process/click", tags=["Click"])
