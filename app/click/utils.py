@@ -9,57 +9,33 @@ from .status import (PREPARE, COMPLETE, AUTHORIZATION_FAIL_CODE, AUTHORIZATION_F
 from app.config import settings
 
 
-# VALIDATE_CLASS = None
-# async def create_click_process(request):
-#         serializer = ClickTransactionCreate(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#
-#         METHODS = {
-#             PREPARE: self.prepare,
-#             COMPLETE: self.complete
-#         }
-#
-#         merchant_trans_id = serializer.validated_data['merchant_trans_id']
-#         amount = serializer.validated_data['amount']
-#         action = serializer.validated_data['action']
-#         if authorization(**serializer.validated_data) is False:
-#             return Response({
-#                 "error": AUTHORIZATION_FAIL_CODE,
-#                 "error_note": AUTHORIZATION_FAIL
-#             })
-#
-#         assert self.VALIDATE_CLASS
-#         check_order = self.VALIDATE_CLASS().check_order(order_id=merchant_trans_id, amount=amount)
-#         if check_order is True:
-#             result = METHODS[action](**serializer.validated_data)
-#             return Response(result)
-#         return Response({"error": check_order})
-
-
-def order_load(order_id):
+async def order_load(order_id):
     if int(order_id) > 1000000000:
         return None
-    transaction = ClickTransaction.get(id=order_id)
+    transaction = await ClickTransaction.get(id=order_id)
+    print("transaction", transaction.amount)
     if not transaction:
         return None
     return transaction
 
 
-def click_webhook_errors(click_trans_id: str,
-                         service_id: str,
-                         merchant_trans_id: str,
-                         amount: str,
-                         action: str,
-                         sign_time: str,
-                         sign_string: str,
-                         error: str,
-                         merchant_prepare_id: str = None) -> dict:
+async def click_webhook_errors(click_trans_id: str,
+                               service_id: str,
+                               merchant_trans_id: str,
+                               amount: str,
+                               action: str,
+                               sign_time: str,
+                               sign_string: str,
+                               error: str,
+                               merchant_prepare_id: str = None) -> dict:
     merchant_prepare_id = merchant_prepare_id if action and action == '1' else ''
     created_sign_string = '{}{}{}{}{}{}{}{}'.format(
         click_trans_id, service_id, settings.CLICK_SETTINGS['secret_key'],
         merchant_trans_id, merchant_prepare_id, amount, action, sign_time)
     encoder = hashlib.md5(created_sign_string.encode('utf-8'))
+
     created_sign_string = encoder.hexdigest()
+    print(created_sign_string)
     if created_sign_string != sign_string:
         return {
             'error': AUTHORIZATION_FAIL_CODE,
@@ -73,6 +49,7 @@ def click_webhook_errors(click_trans_id: str,
         }
 
     order = order_load(merchant_trans_id)
+    print("order 56", await order.amount)
     if not order:
         return {
             'error': ORDER_NOT_FOUND,
@@ -109,17 +86,17 @@ def click_webhook_errors(click_trans_id: str,
     }
 
 
-def prepare(click_trans_id: str,
-            service_id: str,
-            click_paydoc_id: str,
-            merchant_trans_id: str,
-            amount: str,
-            action: str,
-            sign_time: str,
-            sign_string: str,
-            error: str,
-            error_note: str,
-            *args, **kwargs) -> dict:
+async def prepare(click_trans_id: str,
+                  service_id: str,
+                  click_paydoc_id: str,
+                  merchant_trans_id: str,
+                  amount: str,
+                  action: str,
+                  sign_time: str,
+                  sign_string: str,
+                  error: str,
+                  error_note: str,
+                  *args, **kwargs) -> dict:
     """
     :param click_trans_id:
     :param service_id:
@@ -135,12 +112,13 @@ def prepare(click_trans_id: str,
     :param kwargs:
     :return:
     """
-    result = click_webhook_errors(click_trans_id, service_id, merchant_trans_id,
-                                  amount, action, sign_time, sign_string, error)
-    order = order_load(merchant_trans_id)
+    result = await click_webhook_errors(click_trans_id, service_id, merchant_trans_id,
+                                        amount, action, sign_time, sign_string, error)
+    print("RESULT-compare", result)
+    order = await order_load(merchant_trans_id)
     if result['error'] == '0':
         order.status = ClickTransaction.WAITING
-        order.save()
+        await order.save()
     result['click_trans_id'] = click_trans_id
     result['merchant_trans_id'] = merchant_trans_id
     result['merchant_prepare_id'] = merchant_trans_id
@@ -148,18 +126,18 @@ def prepare(click_trans_id: str,
     return result
 
 
-def complete(click_trans_id: str,
-             service_id: str,
-             click_paydoc_id: str,
-             merchant_trans_id: str,
-             amount: str,
-             action: str,
-             sign_time: str,
-             sign_string: str,
-             error: str,
-             error_note: str,
-             merchant_prepare_id: str = None,
-             *args, **kwargs) -> dict:
+async def complete(click_trans_id: str,
+                   service_id: str,
+                   click_paydoc_id: str,
+                   merchant_trans_id: str,
+                   amount: str,
+                   action: str,
+                   sign_time: str,
+                   sign_string: str,
+                   error: str,
+                   error_note: str,
+                   merchant_prepare_id: str = None,
+                   *args, **kwargs) -> dict:
     """
     :param click_trans_id:
     :param service_id:
@@ -176,16 +154,18 @@ def complete(click_trans_id: str,
     :param kwargs:
     :return:
     """
-    order = order_load(merchant_trans_id)
-    result = click_webhook_errors(click_trans_id, service_id, merchant_trans_id,
-                                      amount, action, sign_time, sign_string, error, merchant_prepare_id)
+    print("merchant: ", merchant_trans_id)
+    order = await order_load(merchant_trans_id)
+    result = await click_webhook_errors(click_trans_id, service_id, merchant_trans_id,
+                                        amount, action, sign_time, sign_string, error, merchant_prepare_id)
+    print("RESULT", result)
     if error and int(error) < 0:
-        order.change_status(ClickTransaction.CANCELED)
+        await order.change_status(ClickTransaction.CANCELED)
     if result['error'] == SUCCESS:
-        order.change_status(ClickTransaction.CONFIRMED)
+        await order.change_status(ClickTransaction.CONFIRMED)
         order.click_paydoc_id = click_paydoc_id
-        order.save()
-        # VALIDATE_CLASS().successfully_payment(order)
+        await order.save()
+
     result['click_trans_id'] = click_trans_id
     result['merchant_trans_id'] = merchant_trans_id
     result['merchant_prepare_id'] = merchant_prepare_id

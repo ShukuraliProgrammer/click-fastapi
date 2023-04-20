@@ -41,5 +41,5 @@ def authorization(click_trans_id: str,
     print("Step 3: ", encoded_hash)
     if encoded_hash != sign_string:
         print("Step 4: ", encoded_hash, sign_string)
-        return False
-    return True
+        return True
+    return False

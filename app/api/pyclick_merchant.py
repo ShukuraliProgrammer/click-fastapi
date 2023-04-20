@@ -14,8 +14,25 @@ from app.click.status import (PREPARE, COMPLETE, AUTHORIZATION_FAIL_CODE, AUTHOR
                               SUCCESS)
 
 
+
+async def check_order(order_id: str, amount: str):
+    print("order_id", order_id)
+    if order_id:
+        try:
+            print("order_id", order_id)
+            order = await ClickTransaction.get(id=order_id)
+            print("order", order.amount)
+            if int(amount) == order.amount:
+                print("order.amount", order.amount)
+                return ORDER_FOUND
+            else:
+                return INVALID_AMOUNT
+        except Exception as e:
+            print(e)
+            return ORDER_NOT_FOUND
+
 @router.post("/transaction/")
-def click_merchant(trans_info: ClickTransactionCreate):
+async def click_merchant(trans_info: ClickTransactionCreate):
     click_merchant_in = trans_info.dict(exclude_unset=True)
     print(click_merchant_in)
     METHODS = {
@@ -41,21 +58,10 @@ def click_merchant(trans_info: ClickTransactionCreate):
         }
 
     # assert self.VALIDATE_CLASS
-    check_order = check_order(order_id=merchant_trans_id, amount=amount)
-    if check_order is True:
-        result = METHODS[action](**click_merchant_in.dict())
+    ch_order = await check_order(order_id=merchant_trans_id, amount=amount)
+    print("ch_order", ch_order)
+    if ch_order is True:
+        print("action", action)
+        result = METHODS[action](**click_merchant_in)
         return result
     return {"error": check_order}
-
-
-def check_order(order_id: str, amount: str):
-    if order_id:
-        try:
-            order = ClickTransaction.get(id=order_id)
-            if int(amount) == order.amount:
-                return ORDER_FOUND
-            else:
-                return INVALID_AMOUNT
-        except Exception as e:
-            print(e)
-            return ORDER_NOT_FOUND
