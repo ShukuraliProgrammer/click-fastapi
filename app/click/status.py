@@ -1,3 +1,5 @@
+from enum import Enum
+
 INVALID_AMOUNT = '-2'
 INVALID_ACTION = -4
 TRANSACTION_NOT_FOUND = '-6'
@@ -13,3 +15,10 @@ SUCCESS = 0
 TRANSACTION_CANCELLED = '-9'
 ALREADY_PAID = '-4'
 ACTION_NOT_FOUND = '-3'
+
+
+class ClickStatusEnum(Enum):
+    PROCESSING = "processing"
+    ERROR = "error"
+    CONFIRMED = "confirmed"
+    CANCELED = "cancelled"

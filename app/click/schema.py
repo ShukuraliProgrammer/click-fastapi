@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 
-class ClickTransactionCreate(BaseModel):
+class ClickTransactionSchema(BaseModel):
     click_trans_id: str = ""
     service_id: str = ""
     merchant_trans_id: str = ""
