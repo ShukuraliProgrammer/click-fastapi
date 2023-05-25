@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: fastapi-click
+Version: 1.0.0
+Home-page: https://pypi.org/project/fastapi-click
+Author: Shukurali Rezamonov
+Author-email: shukuralijob@gmail.com
+Requires-Python: >=3.8
