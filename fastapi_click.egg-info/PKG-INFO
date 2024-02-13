@@ -1,7 +1,11 @@
 Metadata-Version: 2.1
 Name: fastapi-click
 Version: 1.0.0
+Summary: This package is preparing now, it is not ready to use but after almost 2 or 3 months it will ready to use.
 Home-page: https://pypi.org/project/fastapi-click
 Author: Shukurali Rezamonov
 Author-email: shukuralijob@gmail.com
 Requires-Python: >=3.8
+Description-Content-Type: text
+
+Developers who work in Uzbekistan will use this package to integrate Click UZ Payment System to their own fastapi projects.
